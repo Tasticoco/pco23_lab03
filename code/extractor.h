@@ -4,11 +4,17 @@
 #include "windowinterface.h"
 #include "costs.h"
 #include "seller.h"
+#include "pcosynchro/pcomutex.h"
 
 /**
  * @brief La classe offrant l'implémentation d'une mine et ces fonctions de ventes.
  */
 class Extractor : public Seller {
+
+public:
+    PcoMutex mining;
+    PcoMutex selling;
+
 public:
     static void setInterface(WindowInterface* interface);
 
