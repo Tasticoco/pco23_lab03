@@ -48,19 +48,57 @@ bool Factory::verifyResources() {
 void Factory::buildItem() {
 
     // TODO
+    int buildCost = getEmployeeSalary(getEmployeeThatProduces(getItemBuilt()));
 
-    //Temps simulant l'assemblage d'un objet.
-    PcoThread::usleep((rand() % 100) * 100000);
+    if(money < buildCost){
+        PcoThread::usleep(1000U);
+        //On essaie d'attentre des jours plus mieux
+    } else {
 
-    // TODO
+        building.lock();
+        money -= buildCost;
+        //Temps simulant l'assemblage d'un objet.
+        PcoThread::usleep((rand() % 100) * 100000);
 
-    interface->consoleAppendText(uniqueId, "Factory have build a new object");
+        // TODO
+        ++nbBuild;
+        stocks.at(getItemBuilt()) += 1;
+        building.unlock();
+        interface->consoleAppendText(uniqueId, "Factory have build a new object");
+    }
+
 }
 
 void Factory::orderResources() {
 
-    // TODO - Itérer sur les resourcesNeeded et les wholesalers disponibles
+//    std::vector<Wholesale*> theBest;
+//    // TODO - Itérer sur les resourcesNeeded et les wholesalers disponibles
+//    for(int i = 0; i < resourcesNeeded.size();++i){
+//        theBest.emplace_back;
+//        for(Wholesale &wholesale : wholesalers){
+//            if (wholesale.getItemsForSale().at(item) > 0){
+//                if(!theBest) theBest = wholesale;
+//                else if(theBest.getItemsForSale().at(item) < wholesale.getItemsForSale().at(item)) theBest = wholesale;
+//            }
+//        }
+//    }
 
+    // TODO - Itérer sur les resourcesNeeded et les wholesalers disponibles
+    for(ItemType item : resourcesNeeded){
+        ordering.lock();
+        for(auto wholesale : wholesalers){
+
+            if(money >= getCostPerUnit(item)){
+                if (wholesale->trade(item,1)){
+                    money -= getCostPerUnit(item);
+                    stocks.at(item) += 1;
+                    break;
+                }
+            }
+
+        }
+        ordering.unlock();
+    }
     //Temps de pause pour éviter trop de demande
     PcoThread::usleep(10 * 100000);
 
