@@ -67,6 +67,7 @@ private:
 
     PcoMutex building;
     PcoMutex ordering;
+    PcoMutex selling;
 
     /**
      * @brief Fonction privée permettant de vérifier si l'usine à toute les ressources

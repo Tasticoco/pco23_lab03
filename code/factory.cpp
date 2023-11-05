@@ -4,6 +4,8 @@
 #include "wholesale.h"
 #include <pcosynchro/pcothread.h>
 #include <iostream>
+#include <algorithm>
+#include <random>
 
 WindowInterface* Factory::interface = nullptr;
 
@@ -61,6 +63,9 @@ void Factory::buildItem() {
         PcoThread::usleep((rand() % 100) * 100000);
 
         // TODO
+        for(auto itUsed : resourcesNeeded){
+            stocks.at(itUsed) -= 1;
+        }
         ++nbBuild;
         stocks.at(getItemBuilt()) += 1;
         building.unlock();
@@ -84,10 +89,12 @@ void Factory::orderResources() {
 //    }
 
     // TODO - Itérer sur les resourcesNeeded et les wholesalers disponibles
+    auto rng = std::default_random_engine{};
+    auto randWholesale(wholesalers);
     for(ItemType item : resourcesNeeded){
         ordering.lock();
-        for(auto wholesale : wholesalers){
-
+        std::shuffle(std::begin(randWholesale), std::end(randWholesale), rng);
+        for(auto wholesale : randWholesale){
             if(money >= getCostPerUnit(item)){
                 if (wholesale->trade(item,1)){
                     money -= getCostPerUnit(item);
@@ -128,8 +135,16 @@ std::map<ItemType, int> Factory::getItemsForSale() {
 }
 
 int Factory::trade(ItemType it, int qty) {
-    // TODO
-    return 0;
+    selling.lock();
+    if(qty <= 0 || stocks.at(it) < qty){
+        selling.unlock();
+        return 0;
+    }
+    int costTrade = getMaterialCost() * qty;
+    money += costTrade;
+    stocks.at(it) -= qty;
+    selling.unlock();
+    return costTrade;
 }
 
 int Factory::getAmountPaidToWorkers() {

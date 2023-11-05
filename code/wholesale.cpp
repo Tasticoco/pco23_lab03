@@ -71,10 +71,18 @@ std::map<ItemType, int> Wholesale::getItemsForSale() {
 }
 
 int Wholesale::trade(ItemType it, int qty) {
-
-    // TODO
-
-    return 0;
+    trading.lock();
+    auto iter  = stocks.find(it);
+    if(qty <= 0 || iter == stocks.end() || stocks.at(it) < qty){
+        trading.unlock();
+        return 0;
+    }
+    int costTrade = getCostPerUnit(it) * qty;
+    money += costTrade;
+    stocks.at(it) -= qty;
+    trading.unlock();
+    interface->consoleAppendText(uniqueId, QString("I just sold %1").arg(qty) % QString(" of %1").arg(getItemName(it)));
+    return costTrade;
 }
 
 void Wholesale::setInterface(WindowInterface *windowInterface) {
