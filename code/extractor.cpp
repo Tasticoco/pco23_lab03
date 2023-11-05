@@ -47,6 +47,7 @@ void Extractor::run() {
             /* Pas assez d'argent */
             /* Attend des jours meilleurs */
             PcoThread::usleep(1000U);
+            mining.unlock();
             continue;
         }
 

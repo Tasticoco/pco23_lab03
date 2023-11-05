@@ -18,6 +18,7 @@ private:
     static WindowInterface* interface;
 
     PcoMutex trading;
+    PcoMutex buying;
 
     /**
      * @brief Fonction permettant d'acheter des ressources à des usines ou des mines
