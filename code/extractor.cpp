@@ -20,15 +20,17 @@ std::map<ItemType, int> Extractor::getItemsForSale() {
 
 int Extractor::trade(ItemType it, int qty) {
     // TODO
-    selling.lock();
-    if(qty <= 0 || stocks.at(it) < qty){
-        selling.unlock();
+    mutex.lock();
+    auto iter  = stocks.find(it);
+    if(qty <= 0 || iter == stocks.end() || stocks.at(it) < qty){
+        mutex.unlock();
         return 0;
     }
-    int costTrade = getMaterialCost() * qty;
+    int costTrade = getCostPerUnit(it) * qty;
     money += costTrade;
     stocks.at(it) -= qty;
-    selling.unlock();
+    mutex.unlock();
+    interface->consoleAppendText(uniqueId, QString("I just sold %1").arg(qty) % QString(" of %1").arg(getItemName(it)));
     return costTrade;
 }
 
@@ -41,26 +43,28 @@ void Extractor::run() {
 
         int minerCost = getEmployeeSalary(getEmployeeThatProduces(resourceExtracted));
 
-        mining.lock();
+        mutex.lock();
 
         if (money < minerCost) {
             /* Pas assez d'argent */
             /* Attend des jours meilleurs */
+            mutex.unlock();
             PcoThread::usleep(1000U);
-            mining.unlock();
             continue;
         }
 
         /* On peut payer un mineur */
         money -= minerCost;
+        mutex.unlock();
         /* Temps aléatoire borné qui simule le mineur qui mine */
         PcoThread::usleep((rand() % 100 + 1) * 10000);
+        mutex.lock();
         /* Statistiques */
         nbExtracted++;
         /* Incrément des stocks */
         stocks[resourceExtracted] += 1;
 
-        mining.unlock();
+        mutex.unlock();
         /* Message dans l'interface graphique */
         interface->consoleAppendText(uniqueId, QString("1 ") % getItemName(resourceExtracted) %
                                      " has been mined");

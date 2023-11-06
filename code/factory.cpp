@@ -52,12 +52,12 @@ void Factory::buildItem() {
     // TODO
     int buildCost = getEmployeeSalary(getEmployeeThatProduces(getItemBuilt()));
 
+    mutex.lock();
     if(money < buildCost){
+        mutex.unlock();
         PcoThread::usleep(1000U);
         //On essaie d'attentre des jours plus mieux
-    } else {
-
-        building.lock();
+    } else {        
         money -= buildCost;
         //Temps simulant l'assemblage d'un objet.
         PcoThread::usleep((rand() % 100) * 100000);
@@ -68,7 +68,7 @@ void Factory::buildItem() {
         }
         ++nbBuild;
         stocks.at(getItemBuilt()) += 1;
-        building.unlock();
+        mutex.unlock();
         interface->consoleAppendText(uniqueId, "Factory have build a new object");
     }
 
@@ -79,8 +79,9 @@ void Factory::orderResources() {
     // TODO - Itérer sur les resourcesNeeded et les wholesalers disponibles
     auto rng = std::default_random_engine{};
     auto randWholesale(wholesalers);
-    ItemType item = stocks.begin()->first;
+    ItemType item = resourcesNeeded.at(0);
 
+    mutex.lock();
 
     for(ItemType itemComp : resourcesNeeded){
         auto iter  = stocks.find(itemComp);
@@ -90,7 +91,7 @@ void Factory::orderResources() {
         item = (stocks.at(itemComp) < stocks.at(item) ? itemComp : item);
     }
 
-    ordering.lock();
+
 
     std::shuffle(std::begin(randWholesale), std::end(randWholesale), rng);
     for(auto wholesale : randWholesale){
@@ -103,7 +104,7 @@ void Factory::orderResources() {
         }
     }
 
-    ordering.unlock();
+    mutex.unlock();
 
     //Temps de pause pour éviter trop de demande
     PcoThread::usleep(10 * 100000);
@@ -134,15 +135,17 @@ std::map<ItemType, int> Factory::getItemsForSale() {
 }
 
 int Factory::trade(ItemType it, int qty) {
-    selling.lock();
-    if(qty <= 0 || stocks.at(it) < qty){
-        selling.unlock();
+    mutex.lock();
+    auto iter  = stocks.find(it);
+    if(qty <= 0 || iter == stocks.end() || stocks.at(it) < qty){
+        mutex.unlock();
         return 0;
     }
-    int costTrade = getMaterialCost() * qty;
+    int costTrade = getCostPerUnit(it) * qty;
     money += costTrade;
     stocks.at(it) -= qty;
-    selling.unlock();
+    mutex.unlock();
+    interface->consoleAppendText(uniqueId, QString("I just sold %1").arg(qty) % QString(" of %1").arg(getItemName(it)));
     return costTrade;
 }
 

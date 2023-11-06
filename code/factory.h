@@ -3,7 +3,6 @@
 #include <vector>
 #include "windowinterface.h"
 #include "seller.h"
-#include "pcosynchro/pcomutex.h"
 
 class Wholesale;
 
@@ -64,10 +63,6 @@ private:
     int nbBuild;
 
     static WindowInterface* interface;
-
-    PcoMutex building;
-    PcoMutex ordering;
-    PcoMutex selling;
 
     /**
      * @brief Fonction privée permettant de vérifier si l'usine à toute les ressources

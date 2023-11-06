@@ -38,14 +38,13 @@ void Wholesale::buyResources() {
     interface->consoleAppendText(uniqueId, QString("I would like to buy %1 of ").arg(qty) %
                                  getItemName(i) % QString(" which would cost me %1").arg(price));
     /* TODO */
-    buying.lock();
-    if(money >= price){
-        if(s->trade(i, qty)){
-            stocks.at(i) += qty;
-            money -= price;
-        }
+
+    if(money >= price && s->trade(i, qty)){
+        mutex.lock();
+        stocks.at(i) += qty;
+        money -= price;
     }
-    buying.unlock();
+    mutex.unlock();
 }
 
 void Wholesale::run() {
@@ -73,16 +72,16 @@ std::map<ItemType, int> Wholesale::getItemsForSale() {
 }
 
 int Wholesale::trade(ItemType it, int qty) {
-    trading.lock();
+    mutex.lock();
     auto iter  = stocks.find(it);
     if(qty <= 0 || iter == stocks.end() || stocks.at(it) < qty){
-        trading.unlock();
+        mutex.unlock();
         return 0;
     }
     int costTrade = getCostPerUnit(it) * qty;
     money += costTrade;
     stocks.at(it) -= qty;
-    trading.unlock();
+    mutex.unlock();
     interface->consoleAppendText(uniqueId, QString("I just sold %1").arg(qty) % QString(" of %1").arg(getItemName(it)));
     return costTrade;
 }
