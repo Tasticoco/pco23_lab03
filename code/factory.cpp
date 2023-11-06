@@ -76,36 +76,35 @@ void Factory::buildItem() {
 
 void Factory::orderResources() {
 
-//    std::vector<Wholesale*> theBest;
-//    // TODO - Itérer sur les resourcesNeeded et les wholesalers disponibles
-//    for(int i = 0; i < resourcesNeeded.size();++i){
-//        theBest.emplace_back;
-//        for(Wholesale &wholesale : wholesalers){
-//            if (wholesale.getItemsForSale().at(item) > 0){
-//                if(!theBest) theBest = wholesale;
-//                else if(theBest.getItemsForSale().at(item) < wholesale.getItemsForSale().at(item)) theBest = wholesale;
-//            }
-//        }
-//    }
-
     // TODO - Itérer sur les resourcesNeeded et les wholesalers disponibles
     auto rng = std::default_random_engine{};
     auto randWholesale(wholesalers);
-    for(ItemType item : resourcesNeeded){
-        ordering.lock();
-        std::shuffle(std::begin(randWholesale), std::end(randWholesale), rng);
-        for(auto wholesale : randWholesale){
-            if(money >= getCostPerUnit(item)){
-                if (wholesale->trade(item,1)){
-                    money -= getCostPerUnit(item);
-                    stocks.at(item) += 1;
-                    break;
-                }
-            }
+    ItemType item = stocks.begin()->first;
 
+
+    for(ItemType itemComp : resourcesNeeded){
+        auto iter  = stocks.find(itemComp);
+        if(iter == stocks.end()){
+            continue;
         }
-        ordering.unlock();
+        item = (stocks.at(itemComp) < stocks.at(item) ? itemComp : item);
     }
+
+    ordering.lock();
+
+    std::shuffle(std::begin(randWholesale), std::end(randWholesale), rng);
+    for(auto wholesale : randWholesale){
+        if(money >= getCostPerUnit(item)){
+            if (wholesale->trade(item,1)){
+                money -= getCostPerUnit(item);
+                stocks.at(item) += 1;
+                break;
+            }
+        }
+    }
+
+    ordering.unlock();
+
     //Temps de pause pour éviter trop de demande
     PcoThread::usleep(10 * 100000);
 
