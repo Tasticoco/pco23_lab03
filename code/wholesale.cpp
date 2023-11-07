@@ -50,7 +50,7 @@ void Wholesale::buyResources() {
 void Wholesale::run() {
 
     if (sellers.empty()) {
-        std::cerr << "You have to give factories and mines to a wholeseler before launching is routine" << std::endl;
+        std::cerr << "You have to give factories and mines to a wholesaler before launching is routine" << std::endl;
         return;
     }
 

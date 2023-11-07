@@ -21,7 +21,8 @@ std::map<ItemType, int> Extractor::getItemsForSale() {
 int Extractor::trade(ItemType it, int qty) {
     // TODO
     mutex.lock();
-    auto iter  = stocks.find(it);
+    auto iter  = stocks.find(it); //Pour ne pas avoir de "out of range" plus tard
+
     if(qty <= 0 || iter == stocks.end() || stocks.at(it) < qty){
         mutex.unlock();
         return 0;

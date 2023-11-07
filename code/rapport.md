@@ -10,27 +10,48 @@ Ce logiciel simule une logistique entre des :
 - Grossistes
 - Usines
 
-Et le but de ce laboratoire est de bien identifier les sections critiques du 
-programme et les protéger avec des mutex. 
-
+Et le but de ce laboratoire est de bien identifier les sections critiques du
+programme et les protéger avec des mutex.
 
 ## Choix d'implémentation
 
-Au début, nous nous sommes occupés de voir où seraient les sections critiques du 
-programme et le constat est assez simple, tous les endroits où on édite l'argent 
-ou bien le stock de marchandise doivent etre protégé.
+Au début, nous nous sommes concentrés sur l'identification des sections critiques
+dans le programme, qui concernent évidemment les endroits où l'argent et les stocks
+de marchandises sont modifiés. Ces sections doivent donc être protégées.
 
-Nous avons aussi fait plusieurs mutex différent par fonction, car dans le 
-programme, chaque thread s'occupe d'un seul objet. Donc il ne fait pas sens
+Initialement, nous avions implémenté plusieurs mutex distincts dans les différentes
+fonctions de chaque classe, un pour le trading, un pour le building, etc, mais nous
+nous sommes rendu compte que cette approche pouvait conduire à
+des accès concurrents sur les mêmes ressources, provoquant potentiellement des
+problèmes de création/suppression d'argent ou de matériel. Le problème est que nous
+n'avons pris conscience de cela que tardivement, car les accès concurrents sont assez
+rares.
 
+En effet, pour qu'un tel problème survienne, il faut qu'un objet crée quelque chose
+pendant qu'un autre essaie de faire de trade avec lui. Et vu les nombreuses pauses
+simulant les interactions dans notre programme, ce cas de figure se produit très
+rarement, et donc il est très complexe pour nous de le voir lorsqu'on quitte le
+programme. Il nous est arrivé qu'une seule fois que le programme nous indique
+qu'il y avait eu une duplication de l'argent lors de tous nos essais...
 
+Finalement, nous avons utilisé un seul mutex déclaré dans la classe parente Seller,
+dont toutes les autres classes héritent. C'est l'endroit le plus approprié pour le
+placer.
 
 ## Tests effectués
 
-Quand on quitte le programme, on calcule l'argent et le cout des ressources de 
-chaque entitées et on vérifie si le calcul est égal à l'argent avec lequel on a 
-commencé la simulation. Et en faisant cela, c'est un test qui vérifie si l'accès 
-concurant aux ressources est bien protégé et qu'il n'y a pas de perte. 
+Lorsque l'on quitte le programme, on calcule l'argent et la valeur des ressources de
+chaque entité, et on vérifie que ce total est égal à l'argent de départ avec lequel
+la simulation a commencé. Ce test permet de s'assurer que l'accès concurrent aux
+ressources est bien protégé et qu'il n'y a pas de perte.
 
-Sinon, on peut vérifier visuellement que chaque usine achète et produit bien des 
-ressources et que le programme fonctionne bien comme il le faut.
+Mais comme dit précédemment, ce test est très faillible, car l'accès concurrent 
+est très rare dans notre cas de figure. 
+
+On peut également vérifier visuellement pendant l'exécution que chaque usine achète
+et produit bien les ressources attendues, et que le programme se comporte
+correctement.
+
+## Conclusion 
+
+Le but de ce laboratoire est atteint on le pense mais 

@@ -56,7 +56,7 @@ void Factory::buildItem() {
     if(money < buildCost){
         mutex.unlock();
         PcoThread::usleep(1000U);
-        //On essaie d'attentre des jours plus mieux
+        //On attend de meilleurs jours
     } else {        
         money -= buildCost;
         //Temps simulant l'assemblage d'un objet.
@@ -66,6 +66,7 @@ void Factory::buildItem() {
         for(auto itUsed : resourcesNeeded){
             stocks.at(itUsed) -= 1;
         }
+
         ++nbBuild;
         stocks.at(getItemBuilt()) += 1;
         mutex.unlock();
