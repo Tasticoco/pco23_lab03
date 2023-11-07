@@ -77,6 +77,11 @@ vu le problème avec le mutex unique qui bloquait tout le code.
 Il aurait été possible de faire des tests unitaires pour vérifier les accès 
 concurrents, mais nous n'avons pas vraiment les connaissances nécessaires ni le 
 temps pour les mettre en place. 
+
+
+
+
+
 ## Conclusion
 
 Ce laboratoire nous a permis de bien mettre en pratique les connaissances du 
